@@ -3,851 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>内部通報窓口</title>
+  <title>内部通報窓口 - AIチャット</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
-</head>
-<body>
-  <div id="root">読み込み中...</div>
-
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-  <script type="text/babel">
-    const { useState } = React;
-
-    // Google Apps ScriptのURL
-    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxSAdId-tHF2Xc9PpFrpj_nAl--YaiEKIYHE_6Ukee2ncaQk92hi85DvcKsu7M0XxBjVg/exec';
-
-    // シンプルなSVGアイコン
-    const Shield = ({ size = 24 }) => (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-      </svg>
-    );
-
-    const Info = ({ size = 24 }) => (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <circle cx="12" cy="12" r="10"/>
-        <line x1="12" y1="16" x2="12" y2="12"/>
-        <line x1="12" y1="8" x2="12.01" y2="8"/>
-      </svg>
-    );
-
-    const HelpCircle = ({ size = 24 }) => (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <circle cx="12" cy="12" r="10"/>
-        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-        <line x1="12" y1="17" x2="12.01" y2="17"/>
-      </svg>
-    );
-
-    const ChevronRight = ({ size = 24 }) => (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <polyline points="9 18 15 12 9 6"/>
-      </svg>
-    );
-
-    const Check = ({ size = 24 }) => (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <polyline points="20 6 9 17 4 12"/>
-      </svg>
-    );
-
-    const AlertCircle = ({ size = 24 }) => (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <circle cx="12" cy="12" r="10"/>
-        <line x1="12" y1="8" x2="12" y2="12"/>
-        <line x1="12" y1="16" x2="12.01" y2="16"/>
-      </svg>
-    );
-
-    const Phone = ({ size = 24 }) => (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-      </svg>
-    );
-
-    const Key = ({ size = 24 }) => (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
-      </svg>
-    );
-
-    const Send = ({ size = 24 }) => (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <line x1="22" y1="2" x2="11" y2="13"/>
-        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-      </svg>
-    );
-
-    const FileUp = ({ size = 24 }) => (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-        <polyline points="14 2 14 8 20 8"/>
-        <line x1="12" y1="18" x2="12" y2="12"/>
-        <line x1="9" y1="15" x2="15" y2="15"/>
-      </svg>
-    );
-
-    const X = ({ size = 24 }) => (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <line x1="18" y1="6" x2="6" y2="18"/>
-        <line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
-    );
-
-    // メインアプリ
-    const App = () => {
-      const [step, setStep] = useState('welcome');
-      const [formData, setFormData] = useState({
-        incidentDescription: '',
-        incidentDate: '',
-        incidentTime: '',
-        incidentLocation: '',
-        involvedPersons: '',
-        witnessInfo: '',
-        files: []
-      });
-      const [showInfo, setShowInfo] = useState(false);
-      const [showFAQ, setShowFAQ] = useState(false);
-      const [isSubmitting, setIsSubmitting] = useState(false);
-      const [trackingNumber, setTrackingNumber] = useState('');
-      const [isFollowUp, setIsFollowUp] = useState(false);
-      const [followUpNumber, setFollowUpNumber] = useState('');
-      const [followUpMessage, setFollowUpMessage] = useState('');
-
-      const steps = [
-        { id: 'welcome', title: '開始' },
-        { id: 'incident', title: '通報内容' },
-        { id: 'datetime', title: '日時・場所' },
-        { id: 'persons', title: '関係者' },
-        { id: 'evidence', title: '証拠資料' },
-        { id: 'confirm', title: '確認' }
-      ];
-
-      const getCurrentStepIndex = () => steps.findIndex(s => s.id === step);
-
-      const handleFileUpload = (e) => {
-        const newFiles = Array.from(e.target.files);
-        setFormData(prev => ({
-          ...prev,
-          files: [...prev.files, ...newFiles]
-        }));
-      };
-
-      const removeFile = (index) => {
-        setFormData(prev => ({
-          ...prev,
-          files: prev.files.filter((_, i) => i !== index)
-        }));
-      };
-
-      const fileToBase64 = (file) => {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(file);
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = error => reject(error);
-        });
-      };
-
-      const handleSubmit = async () => {
-        setIsSubmitting(true);
-        
-        try {
-          const filesBase64 = await Promise.all(
-            formData.files.map(async (file) => ({
-              name: file.name,
-              type: file.type,
-              size: file.size,
-              data: await fileToBase64(file)
-            }))
-          );
-
-          const submitData = {
-            action: 'newReport',
-            timestamp: new Date().toISOString(),
-            incidentDescription: formData.incidentDescription,
-            incidentDate: formData.incidentDate,
-            incidentTime: formData.incidentTime,
-            incidentLocation: formData.incidentLocation,
-            involvedPersons: formData.involvedPersons,
-            witnessInfo: formData.witnessInfo,
-            files: filesBase64
-          };
-
-          await fetch(GAS_WEB_APP_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(submitData)
-          });
-
-          const newTrackingNumber = 'WB-' + Date.now().toString().slice(-8);
-          setTrackingNumber(newTrackingNumber);
-          setIsSubmitting(false);
-          setStep('complete');
-        } catch (error) {
-          console.error('送信エラー:', error);
-          alert('送信中にエラーが発生しました。もう一度お試しください。');
-          setIsSubmitting(false);
-        }
-      };
-
-      const handleFollowUpSubmit = async () => {
-        if (!followUpNumber || !followUpMessage) {
-          alert('受付番号と追加情報の両方を入力してください。');
-          return;
-        }
-
-        setIsSubmitting(true);
-
-        try {
-          const submitData = {
-            action: 'followUp',
-            trackingNumber: followUpNumber,
-            followUpMessage: followUpMessage,
-            timestamp: new Date().toISOString()
-          };
-
-          await fetch(GAS_WEB_APP_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(submitData)
-          });
-
-          setIsSubmitting(false);
-          alert('追加情報を送信しました。ありがとうございます。');
-          setFollowUpNumber('');
-          setFollowUpMessage('');
-          setIsFollowUp(false);
-        } catch (error) {
-          console.error('送信エラー:', error);
-          alert('送信中にエラーが発生しました。もう一度お試しください。');
-          setIsSubmitting(false);
-        }
-      };
-
-      // ウェルカム画面
-      if (step === 'welcome' && !isFollowUp) {
-        return (
-          <div className="app-container">
-            <div className="header">
-              <div className="logo">
-                <Shield size={28} />
-                内部通報窓口
-              </div>
-              <div className="header-actions">
-                <button className="icon-btn" onClick={() => setShowInfo(true)}>
-                  <Info size={18} /> 匿名性について
-                </button>
-                <button className="icon-btn" onClick={() => setShowFAQ(true)}>
-                  <HelpCircle size={18} /> FAQ
-                </button>
-              </div>
-            </div>
-
-            <div className="main-content">
-              <div className="step-content welcome-step">
-                <div className="welcome-icon">
-                  <Shield size={64} />
-                </div>
-                <h2>内部通報窓口へようこそ</h2>
-                <p className="welcome-description">
-                  このシステムは、職場における不適切な行為を安全に通報するための窓口です。
-                  <strong>あなたの匿名性は完全に保護されます。</strong>
-                </p>
-                
-                <div className="feature-grid">
-                  <div className="feature-card">
-                    <Shield size={24} />
-                    <h4>完全匿名</h4>
-                    <p>個人情報は一切収集しません</p>
-                  </div>
-                  <div className="feature-card">
-                    <AlertCircle size={24} />
-                    <h4>暗号化保存</h4>
-                    <p>Google Workspaceで安全に管理</p>
-                  </div>
-                  <div className="feature-card">
-                    <Check size={24} />
-                    <h4>報復禁止</h4>
-                    <p>法的に通報者を保護</p>
-                  </div>
-                </div>
-
-                <div className="emergency-notice">
-                  <Phone size={20} />
-                  <div>
-                    <strong>緊急時の連絡先</strong>
-                    <p>生命の危険や重大な事態が発生している場合は、直ちに警察（110）または救急（119）に連絡してください。</p>
-                  </div>
-                </div>
-
-                <div className="action-buttons">
-                  <button className="primary-btn" onClick={() => setStep('incident')}>
-                    新規通報を開始する <ChevronRight size={20} />
-                  </button>
-                  <button className="secondary-btn-alt" onClick={() => setIsFollowUp(true)}>
-                    <Key size={20} />
-                    追加情報を送信する
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {showInfo && <InfoModal onClose={() => setShowInfo(false)} />}
-            {showFAQ && <FAQModal onClose={() => setShowFAQ(false)} />}
-          </div>
-        );
-      }
-
-      // 追加情報送信フォーム
-      if (isFollowUp) {
-        return (
-          <div className="app-container">
-            <div className="header">
-              <div className="logo">
-                <Shield size={28} />
-                内部通報窓口
-              </div>
-            </div>
-            <div className="main-content">
-              <div className="step-content">
-                <h2>追加情報の送信</h2>
-                <p className="step-description">
-                  過去の通報に関する追加情報を送信できます。受付番号を入力してください。
-                </p>
-
-                <div className="form-group">
-                  <label>
-                    受付番号 <span className="required">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={followUpNumber}
-                    onChange={(e) => setFollowUpNumber(e.target.value)}
-                    placeholder="例: WB-12345678"
-                    style={{ fontFamily: 'monospace', fontSize: '16px' }}
-                  />
-                  <p className="hint">通報完了時に発行された受付番号を入力してください。</p>
-                </div>
-
-                <div className="form-group">
-                  <label>
-                    追加情報 <span className="required">*</span>
-                  </label>
-                  <textarea
-                    value={followUpMessage}
-                    onChange={(e) => setFollowUpMessage(e.target.value)}
-                    placeholder="追加でお伝えしたい情報を入力してください..."
-                    rows={8}
-                    className="textarea-large"
-                  />
-                </div>
-
-                <div className="info-box">
-                  <Info size={20} />
-                  <p>この追加情報は、元の通報と紐付けられて保存されます。匿名性は引き続き保護されます。</p>
-                </div>
-
-                <div className="button-group">
-                  <button className="secondary-btn" onClick={() => setIsFollowUp(false)}>
-                    キャンセル
-                  </button>
-                  <button 
-                    className="primary-btn"
-                    onClick={handleFollowUpSubmit}
-                    disabled={isSubmitting || !followUpNumber || !followUpMessage}
-                  >
-                    {isSubmitting ? '送信中...' : '送信する'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      }
-
-      // 通報内容入力
-      if (step === 'incident') {
-        return (
-          <div className="app-container">
-            <div className="header">
-              <div className="logo">
-                <Shield size={28} />
-                内部通報窓口
-              </div>
-            </div>
-            <ProgressBar currentIndex={getCurrentStepIndex()} steps={steps} />
-            <div className="main-content">
-              <div className="step-content">
-                <h2>通報内容の詳細</h2>
-                <p className="step-description">何が起きたのか、できるだけ詳しく教えてください。</p>
-                
-                <div className="form-group">
-                  <label>
-                    発生した出来事の詳細 <span className="required">*</span>
-                  </label>
-                  <textarea
-                    value={formData.incidentDescription}
-                    onChange={(e) => setFormData({...formData, incidentDescription: e.target.value})}
-                    placeholder="例：上司から繰り返し侮辱的な発言を受けています。具体的には..."
-                    rows={8}
-                    className="textarea-large"
-                  />
-                  <p className="hint">5W1H（いつ、どこで、誰が、何を、なぜ、どのように）を意識して記載すると、調査がスムーズに進みます。</p>
-                </div>
-
-                <div className="button-group">
-                  <button className="secondary-btn" onClick={() => setStep('welcome')}>
-                    戻る
-                  </button>
-                  <button 
-                    className="primary-btn"
-                    onClick={() => setStep('datetime')}
-                    disabled={!formData.incidentDescription.trim()}
-                  >
-                    次へ <ChevronRight size={20} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      }
-
-      // 日時・場所
-      if (step === 'datetime') {
-        return (
-          <div className="app-container">
-            <div className="header">
-              <div className="logo">
-                <Shield size={28} />
-                内部通報窓口
-              </div>
-            </div>
-            <ProgressBar currentIndex={getCurrentStepIndex()} steps={steps} />
-            <div className="main-content">
-              <div className="step-content">
-                <h2>発生日時と場所</h2>
-                <p className="step-description">出来事がいつ、どこで発生したか教えてください。</p>
-                
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>発生日</label>
-                    <input
-                      type="date"
-                      value={formData.incidentDate}
-                      onChange={(e) => setFormData({...formData, incidentDate: e.target.value})}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>発生時刻（おおよそ）</label>
-                    <input
-                      type="time"
-                      value={formData.incidentTime}
-                      onChange={(e) => setFormData({...formData, incidentTime: e.target.value})}
-                    />
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label>発生場所</label>
-                  <input
-                    type="text"
-                    value={formData.incidentLocation}
-                    onChange={(e) => setFormData({...formData, incidentLocation: e.target.value})}
-                    placeholder="例：本社3階会議室、営業部オフィス内など"
-                  />
-                  <p className="hint">正確な日時や場所が分からない場合は、おおよその情報で構いません。</p>
-                </div>
-
-                <div className="button-group">
-                  <button className="secondary-btn" onClick={() => setStep('incident')}>
-                    戻る
-                  </button>
-                  <button className="primary-btn" onClick={() => setStep('persons')}>
-                    次へ <ChevronRight size={20} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      }
-
-      // 関係者情報
-      if (step === 'persons') {
-        return (
-          <div className="app-container">
-            <div className="header">
-              <div className="logo">
-                <Shield size={28} />
-                内部通報窓口
-              </div>
-            </div>
-            <ProgressBar currentIndex={getCurrentStepIndex()} steps={steps} />
-            <div className="main-content">
-              <div className="step-content">
-                <h2>関係者情報</h2>
-                <p className="step-description">関わった人物について教えてください。</p>
-                
-                <div className="form-group">
-                  <label>関係者（問題行為を行った人物）</label>
-                  <textarea
-                    value={formData.involvedPersons}
-                    onChange={(e) => setFormData({...formData, involvedPersons: e.target.value})}
-                    placeholder="例：営業部の山田課長（40代男性）、または「営業部の40代男性管理職」など"
-                    rows={4}
-                  />
-                  <p className="hint">氏名が分からない場合は、部署、役職、年齢、性別などの情報でも構いません。</p>
-                </div>
-
-                <div className="form-group">
-                  <label>目撃者・証言者（いる場合）</label>
-                  <textarea
-                    value={formData.witnessInfo}
-                    onChange={(e) => setFormData({...formData, witnessInfo: e.target.value})}
-                    placeholder="例：同僚の佐藤さんと鈴木さんがその場にいました"
-                    rows={3}
-                  />
-                  <p className="hint">目撃者がいない場合は空欄で構いません。</p>
-                </div>
-
-                <div className="button-group">
-                  <button className="secondary-btn" onClick={() => setStep('datetime')}>
-                    戻る
-                  </button>
-                  <button className="primary-btn" onClick={() => setStep('evidence')}>
-                    次へ <ChevronRight size={20} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      }
-
-      // 証拠資料
-      if (step === 'evidence') {
-        return (
-          <div className="app-container">
-            <div className="header">
-              <div className="logo">
-                <Shield size={28} />
-                内部通報窓口
-              </div>
-            </div>
-            <ProgressBar currentIndex={getCurrentStepIndex()} steps={steps} />
-            <div className="main-content">
-              <div className="step-content">
-                <h2>証拠資料のアップロード</h2>
-                <p className="step-description">証拠となる資料があればアップロードしてください（任意）。</p>
-                
-                <div className="upload-area">
-                  <FileUp size={48} />
-                  <p>ファイルをドラッグ＆ドロップ</p>
-                  <p className="upload-hint">または</p>
-                  <label className="upload-btn">
-                    ファイルを選択
-                    <input
-                      type="file"
-                      multiple
-                      onChange={handleFileUpload}
-                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.mp4,.mp3,.txt"
-                      style={{ display: 'none' }}
-                    />
-                  </label>
-                  <p className="upload-note">
-                    対応形式: PDF, Word, 画像(JPG/PNG), 動画(MP4), 音声(MP3), テキスト<br />
-                    最大サイズ: 1ファイルあたり10MB
-                  </p>
-                </div>
-
-                {formData.files.length > 0 && (
-                  <div className="file-list">
-                    <h4>アップロード済みファイル ({formData.files.length})</h4>
-                    {formData.files.map((file, index) => (
-                      <div key={index} className="file-item">
-                        <div className="file-info">
-                          <FileUp size={20} />
-                          <span>{file.name}</span>
-                          <span className="file-size">
-                            ({(file.size / 1024).toFixed(1)} KB)
-                          </span>
-                        </div>
-                        <button
-                          onClick={() => removeFile(index)}
-                          className="remove-file-btn"
-                        >
-                          削除
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <div className="info-box">
-                  <Info size={20} />
-                  <p>証拠資料は任意です。ファイルはGoogle Driveに暗号化して保存され、コンプライアンス担当者のみがアクセスできます。</p>
-                </div>
-
-                <div className="button-group">
-                  <button className="secondary-btn" onClick={() => setStep('persons')}>
-                    戻る
-                  </button>
-                  <button className="primary-btn" onClick={() => setStep('confirm')}>
-                    次へ <ChevronRight size={20} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      }
-
-      // 確認画面
-      if (step === 'confirm') {
-        return (
-          <div className="app-container">
-            <div className="header">
-              <div className="logo">
-                <Shield size={28} />
-                内部通報窓口
-              </div>
-            </div>
-            <ProgressBar currentIndex={getCurrentStepIndex()} steps={steps} />
-            <div className="main-content">
-              <div className="step-content">
-                <h2>入力内容の確認</h2>
-                <p className="step-description">通報内容をご確認ください。</p>
-                
-                <div className="confirm-section">
-                  <h3>通報内容の詳細</h3>
-                  <div className="confirm-item">
-                    <div className="confirm-label">発生した出来事</div>
-                    <div className="confirm-value">{formData.incidentDescription || '（未入力）'}</div>
-                  </div>
-                </div>
-
-                <div className="confirm-section">
-                  <h3>発生日時・場所</h3>
-                  <div className="confirm-item">
-                    <div className="confirm-label">日時</div>
-                    <div className="confirm-value">
-                      {formData.incidentDate || '（未入力）'} {formData.incidentTime || ''}
-                    </div>
-                  </div>
-                  <div className="confirm-item">
-                    <div className="confirm-label">場所</div>
-                    <div className="confirm-value">{formData.incidentLocation || '（未入力）'}</div>
-                  </div>
-                </div>
-
-                <div className="confirm-section">
-                  <h3>関係者情報</h3>
-                  <div className="confirm-item">
-                    <div className="confirm-label">関係者</div>
-                    <div className="confirm-value">{formData.involvedPersons || '（未入力）'}</div>
-                  </div>
-                  <div className="confirm-item">
-                    <div className="confirm-label">目撃者</div>
-                    <div className="confirm-value">{formData.witnessInfo || '（未入力）'}</div>
-                  </div>
-                </div>
-
-                <div className="confirm-section">
-                  <h3>証拠資料</h3>
-                  <div className="confirm-item">
-                    <div className="confirm-value">
-                      {formData.files.length > 0 ? (
-                        <div>
-                          {formData.files.map((file, index) => (
-                            <div key={index}>・{file.name}</div>
-                          ))}
-                        </div>
-                      ) : '（ファイルなし）'}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="warning-box">
-                  <AlertCircle size={20} />
-                  <p>送信後は内容の変更ができません。よろしければ「送信する」ボタンを押してください。データはGoogle Sheetsに暗号化して保存され、コンプライアンス担当者に自動通知されます。</p>
-                </div>
-
-                <div className="button-group">
-                  <button className="secondary-btn" onClick={() => setStep('evidence')}>
-                    戻る
-                  </button>
-                  <button 
-                    className="primary-btn"
-                    onClick={handleSubmit}
-                    disabled={isSubmitting}
-                    style={{ background: '#10b981' }}
-                  >
-                    {isSubmitting ? '処理中...' : (<><Send size={20} /> 送信する</>)}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      }
-
-      // 完了画面
-      if (step === 'complete') {
-        return (
-          <div className="app-container">
-            <div className="header">
-              <div className="logo">
-                <Shield size={28} />
-                内部通報窓口
-              </div>
-            </div>
-            <div className="main-content">
-              <div className="step-content complete-step">
-                <div className="success-icon">
-                  <Check size={64} />
-                </div>
-                <h2>通報を受け付けました</h2>
-                <p className="complete-description">
-                  ご通報ありがとうございます。内容はGoogle Workspaceに暗号化して保存され、コンプライアンス担当者に自動通知されました。
-                </p>
-
-                <div className="tracking-info">
-                  <h3>受付番号</h3>
-                  <div className="tracking-number">{trackingNumber}</div>
-                  <p className="tracking-note important-note">
-                    <strong>⚠️ この番号は必ず保存してください</strong><br />
-                    後から追加情報を送信する際に必要になります。この画面を離れると、二度と表示されません。
-                  </p>
-                </div>
-
-                <div className="info-box">
-                  <Info size={20} />
-                  <div>
-                    <p style={{marginBottom: '12px'}}>
-                      調査の進捗状況や結果について、個別の連絡は行いません。匿名性保護のため、ご理解ください。
-                    </p>
-                    <p>
-                      <strong>追加情報がある場合:</strong> 受付番号「{trackingNumber}」を使って、いつでも追加情報を送信できます。
-                    </p>
-                  </div>
-                </div>
-
-                <button className="primary-btn" onClick={() => window.location.reload()}>
-                  ウィンドウを閉じる
-                </button>
-              </div>
-            </div>
-          </div>
-        );
-      }
-
-      return null;
-    };
-
-    // プログレスバー
-    const ProgressBar = ({ currentIndex, steps }) => {
-      const progressSteps = steps.slice(1);
-      return (
-        <div className="progress-bar">
-          <div className="progress-steps">
-            <div className="progress-line">
-              <div 
-                className="progress-line-fill" 
-                style={{ width: `${(currentIndex / (progressSteps.length - 1)) * 100}%` }}
-              />
-            </div>
-            {progressSteps.map((s, index) => {
-              const stepIndex = index + 1;
-              return (
-                <div key={s.id} className="progress-step">
-                  <div className={`step-circle ${stepIndex === currentIndex ? 'active' : ''} ${stepIndex < currentIndex ? 'completed' : ''}`}>
-                    {stepIndex < currentIndex ? <Check size={16} /> : stepIndex}
-                  </div>
-                  <div className={`step-title ${stepIndex === currentIndex ? 'active' : ''}`}>
-                    {s.title}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      );
-    };
-
-    // 情報モーダル
-    const InfoModal = ({ onClose }) => (
-      <div className="modal-overlay" onClick={onClose}>
-        <div className="modal-content" onClick={e => e.stopPropagation()}>
-          <div className="modal-header">
-            <h3>匿名性の保証について</h3>
-            <button onClick={onClose} className="close-btn">
-              <X size={20} />
-            </button>
-          </div>
-          <div className="modal-body">
-            <div className="info-section">
-              <Shield size={32} className="info-icon" />
-              <h4>完全匿名性</h4>
-              <p>当システムは、通報者の身元を特定できる情報を一切収集しません。IPアドレスやデバイス情報も記録されません。</p>
-            </div>
-            <div className="info-section">
-              <AlertCircle size={32} className="info-icon" />
-              <h4>暗号化通信</h4>
-              <p>通報内容はGoogle Apps Scriptで暗号化され、Google Sheetsに安全に保管されます。閲覧権限はコンプライアンス担当者のみに制限されています。</p>
-            </div>
-            <div className="info-section">
-              <Check size={32} className="info-icon" />
-              <h4>報復からの保護</h4>
-              <p>通報を理由とした不利益な取り扱いは、法律で禁止されています。会社は通報者保護を最優先します。</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-
-    // FAQモーダル
-    const FAQModal = ({ onClose }) => (
-      <div className="modal-overlay" onClick={onClose}>
-        <div className="modal-content" onClick={e => e.stopPropagation()}>
-          <div className="modal-header">
-            <h3>よくある質問</h3>
-            <button onClick={onClose} className="close-btn">
-              <X size={20} />
-            </button>
-          </div>
-          <div className="modal-body">
-            <div className="faq-item">
-              <h4>Q. 本当に匿名で通報できますか？</h4>
-              <p>A. はい、完全に匿名です。個人を特定できる情報は一切収集しません。データはGoogle Workspaceで暗号化して管理され、コンプライアンス担当者のみがアクセスできます。</p>
-            </div>
-            <div className="faq-item">
-              <h4>Q. どのような内容を通報できますか？</h4>
-              <p>A. ハラスメント、不正行為、コンプライアンス違反、安全衛生上の問題など、職場における不適切な行為全般を通報できます。</p>
-            </div>
-            <div className="faq-item">
-              <h4>Q. 証拠がなくても通報できますか？</h4>
-              <p>A. はい、できます。証拠は必須ではありませんが、あれば調査がスムーズに進みます。</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-
-    // アプリをレンダリング
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
-  </script>
-
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap');
-    
     * {
       margin: 0;
       padding: 0;
@@ -855,13 +13,13 @@
     }
 
     body {
-      font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: 'Noto Sans JP', sans-serif;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       min-height: 100vh;
       color: #1a1a1a;
     }
 
-    .app-container {
+    .container {
       max-width: 900px;
       margin: 0 auto;
       padding: 20px;
@@ -887,719 +45,531 @@
       color: #667eea;
     }
 
-    .header-actions {
-      display: flex;
-      gap: 12px;
-    }
-
-    .icon-btn {
-      background: #f5f5f5;
-      border: none;
-      padding: 10px 12px;
-      border-radius: 8px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 14px;
-      font-weight: 500;
-      color: #444;
-      transition: all 0.2s;
-    }
-
-    .icon-btn:hover {
-      background: #e8e8e8;
-      transform: translateY(-1px);
-    }
-
-    .main-content {
+    .chat-container {
       background: white;
-      padding: 40px;
       border-radius: 0 0 16px 16px;
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-      min-height: 500px;
+      height: 600px;
+      display: flex;
+      flex-direction: column;
     }
 
-    .step-content h2 {
-      font-size: 28px;
-      font-weight: 700;
-      color: #1a1a1a;
-      margin-bottom: 12px;
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
     }
 
-    .step-description {
-      font-size: 15px;
-      color: #666;
-      margin-bottom: 32px;
+    .message {
+      display: flex;
+      gap: 12px;
+      animation: fadeIn 0.3s;
     }
 
-    .welcome-step {
-      text-align: center;
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    .welcome-icon {
-      width: 100px;
-      height: 100px;
-      background: linear-gradient(135deg, #667eea, #764ba2);
+    .message.ai {
+      align-self: flex-start;
+    }
+
+    .message.user {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+
+    .message-avatar {
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 24px;
+      flex-shrink: 0;
+      font-size: 20px;
+    }
+
+    .message.ai .message-avatar {
+      background: linear-gradient(135deg, #667eea, #764ba2);
       color: white;
     }
 
-    .welcome-description {
-      font-size: 16px;
-      line-height: 1.8;
-      color: #444;
-      margin-bottom: 40px;
-      max-width: 600px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    .welcome-description strong {
+    .message.user .message-avatar {
+      background: #f3f4f6;
       color: #667eea;
     }
 
-    .feature-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-      margin-bottom: 40px;
-    }
-
-    .feature-card {
-      background: #f9fafb;
-      padding: 24px;
+    .message-content {
+      max-width: 70%;
+      padding: 12px 16px;
       border-radius: 12px;
-      border: 1px solid #e8e8e8;
-      text-align: center;
-    }
-
-    .feature-card svg {
-      color: #667eea;
-    }
-
-    .feature-card h4 {
-      font-size: 16px;
-      font-weight: 600;
-      margin: 12px 0 8px 0;
-      color: #1a1a1a;
-    }
-
-    .feature-card p {
-      font-size: 13px;
-      color: #666;
-      line-height: 1.5;
-    }
-
-    .emergency-notice {
-      background: #fef3c7;
-      border: 1px solid #fbbf24;
-      border-radius: 12px;
-      padding: 20px;
-      display: flex;
-      gap: 16px;
-      margin-bottom: 32px;
-      text-align: left;
-    }
-
-    .emergency-notice svg {
-      color: #d97706;
-      flex-shrink: 0;
-      margin-top: 2px;
-    }
-
-    .emergency-notice strong {
-      display: block;
-      color: #92400e;
-      margin-bottom: 8px;
-      font-size: 14px;
-    }
-
-    .emergency-notice p {
-      font-size: 13px;
-      color: #78350f;
       line-height: 1.6;
-    }
-
-    .action-buttons {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      align-items: center;
-      max-width: 400px;
-      margin: 0 auto;
-    }
-
-    .primary-btn,
-    .secondary-btn-alt,
-    .secondary-btn {
-      padding: 14px 28px;
-      border-radius: 8px;
-      font-weight: 600;
       font-size: 15px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: all 0.2s;
-      font-family: 'Noto Sans JP', sans-serif;
-      border: none;
-      width: 100%;
     }
 
-    .primary-btn {
+    .message.ai .message-content {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+    }
+
+    .message.user .message-content {
       background: #667eea;
       color: white;
     }
 
-    .primary-btn:hover:not(:disabled) {
-      background: #5568d3;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    .typing-indicator {
+      display: flex;
+      gap: 4px;
+      padding: 8px;
     }
 
-    .primary-btn:disabled {
-      background: #d1d5db;
-      cursor: not-allowed;
+    .typing-indicator span {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #667eea;
+      animation: typing 1.4s infinite;
     }
 
-    .secondary-btn-alt {
-      border: 2px solid #667eea;
-      background: white;
-      color: #667eea;
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typing {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-10px); }
     }
 
-    .secondary-btn-alt:hover {
-      background: #f5f7ff;
-      transform: translateY(-1px);
+    .chat-input-area {
+      border-top: 1px solid #e5e7eb;
+      padding: 20px;
+      display: flex;
+      gap: 12px;
     }
 
-    .secondary-btn {
-      background: #f3f4f6;
-      color: #4b5563;
-    }
-
-    .secondary-btn:hover {
-      background: #e5e7eb;
-    }
-
-    .form-group {
-      margin-bottom: 24px;
-      text-align: left;
-    }
-
-    .form-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-    }
-
-    label {
-      display: block;
-      font-weight: 600;
-      margin-bottom: 8px;
-      color: #1a1a1a;
-      font-size: 14px;
-    }
-
-    .required {
-      color: #ef4444;
-    }
-
-    input[type="text"],
-    input[type="date"],
-    input[type="time"],
-    textarea {
-      width: 100%;
+    .chat-input {
+      flex: 1;
       padding: 12px 16px;
       border: 1px solid #d1d5db;
       border-radius: 8px;
       font-size: 15px;
       font-family: 'Noto Sans JP', sans-serif;
-      transition: all 0.2s;
+      resize: none;
+      min-height: 50px;
+      max-height: 120px;
     }
 
-    input:focus,
-    textarea:focus {
+    .chat-input:focus {
       outline: none;
       border-color: #667eea;
       box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
 
-    textarea {
-      resize: vertical;
-      min-height: 100px;
-    }
-
-    .textarea-large {
-      min-height: 180px;
-    }
-
-    .hint {
-      font-size: 13px;
-      color: #6b7280;
-      margin-top: 8px;
-      line-height: 1.5;
-    }
-
-    .button-group {
-      display: flex;
-      gap: 12px;
-      justify-content: flex-end;
-      margin-top: 32px;
-    }
-
-    .upload-area {
-      border: 2px dashed #d1d5db;
-      border-radius: 12px;
-      padding: 48px 24px;
-      text-align: center;
-      background: #f9fafb;
-      margin-bottom: 24px;
-      transition: all 0.2s;
-    }
-
-    .upload-area:hover {
-      border-color: #667eea;
-      background: #f5f7ff;
-    }
-
-    .upload-area svg {
-      color: #667eea;
-      margin-bottom: 16px;
-    }
-
-    .upload-area p {
-      color: #4b5563;
-      margin: 8px 0;
-    }
-
-    .upload-hint {
-      font-size: 13px;
-      color: #9ca3af;
-    }
-
-    .upload-btn {
-      display: inline-block;
+    .send-button {
+      padding: 12px 24px;
       background: #667eea;
       color: white;
-      padding: 12px 24px;
+      border: none;
       border-radius: 8px;
       font-weight: 600;
       cursor: pointer;
-      margin: 16px 0;
       transition: all 0.2s;
+      font-family: 'Noto Sans JP', sans-serif;
+      align-self: flex-end;
     }
 
-    .upload-btn:hover {
+    .send-button:hover:not(:disabled) {
       background: #5568d3;
       transform: translateY(-1px);
     }
 
-    .upload-note {
-      font-size: 12px;
-      color: #9ca3af;
-      line-height: 1.6;
+    .send-button:disabled {
+      background: #d1d5db;
+      cursor: not-allowed;
     }
 
-    .file-list {
-      background: #f9fafb;
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 24px;
-    }
-
-    .file-list h4 {
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 16px;
-      color: #1a1a1a;
-    }
-
-    .file-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px;
-      background: white;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      margin-bottom: 8px;
-    }
-
-    .file-info {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex: 1;
-    }
-
-    .file-size {
-      color: #9ca3af;
-      font-size: 12px;
-    }
-
-    .remove-file-btn {
-      background: #fee2e2;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      color: #dc2626;
-      font-size: 12px;
-      transition: all 0.2s;
-    }
-
-    .remove-file-btn:hover {
-      background: #fecaca;
-    }
-
-    .info-box,
-    .warning-box {
-      display: flex;
-      gap: 12px;
+    .file-upload-area {
+      display: none;
+      margin-top: 12px;
       padding: 16px;
+      background: #f9fafb;
       border-radius: 8px;
-      margin-bottom: 24px;
-      font-size: 14px;
-      line-height: 1.6;
+      border: 2px dashed #d1d5db;
     }
 
-    .info-box {
+    .file-upload-area.active {
+      display: block;
+    }
+
+    .quick-actions {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .quick-action-btn {
+      padding: 8px 16px;
+      background: white;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+
+    .quick-action-btn:hover {
+      border-color: #667eea;
+      background: #f5f7ff;
+    }
+
+    .mode-switch {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .mode-btn {
+      flex: 1;
+      padding: 12px;
+      border: 2px solid #e5e7eb;
+      background: white;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+
+    .mode-btn.active {
+      border-color: #667eea;
+      background: #f5f7ff;
+      color: #667eea;
+    }
+
+    .summary-box {
       background: #eff6ff;
       border: 1px solid #93c5fd;
-      color: #1e40af;
-    }
-
-    .info-box svg {
-      color: #3b82f6;
-      flex-shrink: 0;
-      margin-top: 2px;
-    }
-
-    .warning-box {
-      background: #fef3c7;
-      border: 1px solid #fbbf24;
-      color: #92400e;
-    }
-
-    .warning-box svg {
-      color: #d97706;
-      flex-shrink: 0;
-      margin-top: 2px;
-    }
-
-    .progress-bar {
-      background: white;
-      padding: 24px 32px;
-      border-bottom: 1px solid #e8e8e8;
-    }
-
-    .progress-steps {
-      display: flex;
-      justify-content: space-between;
-      position: relative;
-    }
-
-    .progress-step {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      position: relative;
-      z-index: 1;
-    }
-
-    .step-circle {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: #e8e8e8;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 600;
-      font-size: 14px;
-      margin-bottom: 8px;
-      transition: all 0.3s;
-    }
-
-    .step-circle.active {
-      background: #667eea;
-      color: white;
-      box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
-    }
-
-    .step-circle.completed {
-      background: #10b981;
-      color: white;
-    }
-
-    .step-title {
-      font-size: 12px;
-      color: #666;
-      font-weight: 500;
-    }
-
-    .step-title.active {
-      color: #667eea;
-      font-weight: 600;
-    }
-
-    .progress-line {
-      position: absolute;
-      top: 16px;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background: #e8e8e8;
-      z-index: 0;
-    }
-
-    .progress-line-fill {
-      height: 100%;
-      background: #667eea;
-      transition: width 0.3s;
-    }
-
-    .confirm-section {
-      margin-bottom: 32px;
-      text-align: left;
-    }
-
-    .confirm-section h3 {
-      font-size: 16px;
-      font-weight: 600;
-      color: #1a1a1a;
-      margin-bottom: 16px;
-      padding-bottom: 8px;
-      border-bottom: 2px solid #e5e7eb;
-    }
-
-    .confirm-item {
-      margin-bottom: 16px;
-    }
-
-    .confirm-label {
-      font-size: 13px;
-      font-weight: 600;
-      color: #6b7280;
-      margin-bottom: 4px;
-    }
-
-    .confirm-value {
-      font-size: 15px;
-      color: #1a1a1a;
-      line-height: 1.6;
-      white-space: pre-wrap;
-    }
-
-    .complete-step {
-      text-align: center;
-    }
-
-    .success-icon {
-      width: 100px;
-      height: 100px;
-      background: #10b981;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 24px;
-      color: white;
-    }
-
-    .complete-description {
-      font-size: 16px;
-      color: #4b5563;
-      margin-bottom: 32px;
-      line-height: 1.8;
-    }
-
-    .tracking-info {
-      background: #f9fafb;
-      border: 2px solid #667eea;
-      border-radius: 12px;
-      padding: 24px;
-      margin-bottom: 32px;
-    }
-
-    .tracking-info h3 {
-      font-size: 14px;
-      font-weight: 600;
-      color: #6b7280;
-      margin-bottom: 12px;
-    }
-
-    .tracking-number {
-      font-size: 28px;
-      font-weight: 700;
-      color: #667eea;
-      font-family: 'Courier New', monospace;
-      letter-spacing: 2px;
-      margin-bottom: 12px;
-      padding: 12px;
-      background: white;
       border-radius: 8px;
+      padding: 16px;
+      margin: 16px 0;
     }
 
-    .tracking-note {
-      font-size: 12px;
-      color: #9ca3af;
+    .summary-title {
+      font-weight: 600;
+      color: #1e40af;
+      margin-bottom: 8px;
+    }
+
+    .summary-content {
+      font-size: 14px;
+      color: #1e40af;
       line-height: 1.6;
     }
 
-    .important-note {
-      color: #92400e;
-      background: #fef3c7;
-      padding: 12px;
-      border-radius: 6px;
-      margin-top: 12px;
-    }
-
-    .important-note strong {
-      color: #78350f;
-    }
-
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      padding: 20px;
-    }
-
-    .modal-content {
-      background: white;
-      border-radius: 16px;
-      max-width: 600px;
-      width: 100%;
-      max-height: 80vh;
-      overflow-y: auto;
-    }
-
-    .modal-header {
-      padding: 24px 32px;
-      border-bottom: 1px solid #e5e7eb;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .modal-header h3 {
-      font-size: 20px;
-      font-weight: 700;
-      color: #1a1a1a;
-    }
-
-    .close-btn {
-      background: #f3f4f6;
-      border: none;
-      padding: 8px;
-      border-radius: 6px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s;
-    }
-
-    .close-btn:hover {
-      background: #e5e7eb;
-    }
-
-    .modal-body {
-      padding: 32px;
-    }
-
-    .info-section {
-      margin-bottom: 32px;
-    }
-
-    .info-section:last-child {
-      margin-bottom: 0;
-    }
-
-    .info-icon {
-      color: #667eea;
-      margin-bottom: 12px;
-    }
-
-    .info-section h4 {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 8px;
-      color: #1a1a1a;
-    }
-
-    .info-section p {
-      font-size: 14px;
-      color: #4b5563;
-      line-height: 1.7;
-    }
-
-    .faq-item {
-      margin-bottom: 24px;
-      padding-bottom: 24px;
-      border-bottom: 1px solid #e5e7eb;
-    }
-
-    .faq-item:last-child {
-      border-bottom: none;
-      padding-bottom: 0;
-      margin-bottom: 0;
-    }
-
-    .faq-item h4 {
-      font-size: 15px;
-      font-weight: 600;
-      color: #667eea;
-      margin-bottom: 8px;
-    }
-
-    .faq-item p {
-      font-size: 14px;
-      color: #4b5563;
-      line-height: 1.7;
+    .hidden {
+      display: none;
     }
 
     @media (max-width: 768px) {
-      .app-container {
+      .container {
         padding: 10px;
       }
-
       .header {
         padding: 16px 20px;
       }
-
-      .main-content {
-        padding: 24px 20px;
+      .chat-container {
+        height: calc(100vh - 120px);
       }
-
-      .feature-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .form-row {
-        grid-template-columns: 1fr;
-      }
-
-      .step-title {
-        display: none;
+      .message-content {
+        max-width: 85%;
       }
     }
   </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">
+        🛡️ 内部通報窓口
+      </div>
+    </div>
+
+    <div style="background: white; padding: 20px; border-bottom: 1px solid #e5e7eb;">
+      <div class="mode-switch">
+        <button class="mode-btn active" onclick="switchMode('chat')">AIチャット（推奨）</button>
+        <button class="mode-btn" onclick="switchMode('form')">簡易フォーム</button>
+      </div>
+    </div>
+
+    <div id="chatMode" class="chat-container">
+      <div class="chat-messages" id="chatMessages"></div>
+      
+      <div class="chat-input-area">
+        <textarea 
+          class="chat-input" 
+          id="chatInput" 
+          placeholder="こちらに入力してください..."
+          rows="1"
+        ></textarea>
+        <button class="send-button" id="sendButton" onclick="sendMessage()">送信</button>
+      </div>
+    </div>
+
+    <div id="formMode" class="hidden">
+      <div style="background: white; padding: 40px; border-radius: 0 0 16px 16px;">
+        <p style="text-align: center; color: #666;">簡易フォームモードは現在の通報フォームと同じです。</p>
+        <p style="text-align: center; color: #666; margin-top: 12px;">
+          <a href="https://whistleblower-system-i8im.vercel.app/" style="color: #667eea;">従来のフォームはこちら</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================
+    // 🔧 重要: ここにGemini APIキーを設定
+    // ============================================
+    const GEMINI_API_KEY = 'AIzaSyD5dfjX-h06jc83-7fuA9-kn9yiggVtyec';
+    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxSAdId-tHF2Xc9PpFrpj_nAl--YaiEKIYHE_6Ukee2ncaQk92hi85DvcKsu7M0XxBjVg/exec';
+
+    let conversationHistory = [];
+    let collectedData = {};
+    let isProcessing = false;
+
+    // 初期化
+    window.onload = function() {
+      startConversation();
+    };
+
+    function startConversation() {
+      const welcomeMessage = `こんにちは。内部通報窓口へようこそ。
+
+私はAIアシスタントです。あなたの通報内容を丁寧にお伺いします。
+
+**あなたの匿名性は完全に保護されます。安心してお話しください。**
+
+まず、どのような出来事について通報されたいですか？
+簡単で構いませんので、教えていただけますか？`;
+
+      addMessage('ai', welcomeMessage);
+      conversationHistory.push({
+        role: 'user',
+        parts: [{text: 'システムプロンプト: あなたは内部通報窓口のAIアシスタントです。親しみやすく優しい口調で、共感しながら丁寧にヒアリングしてください。以下の情報を段階的に収集してください：1.通報内容、2.発生日時・場所、3.関係者情報、4.目撃者情報、5.証拠資料、6.通報者の感情、7.被害の程度、8.希望する対応、9.連絡先提供の可否。ユーザーが「分からない」と答えても、優しく深掘りしてください。'}]
+      });
+      conversationHistory.push({
+        role: 'model',
+        parts: [{text: welcomeMessage}]
+      });
+    }
+
+    function addMessage(type, content) {
+      const messagesDiv = document.getElementById('chatMessages');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${type}`;
+      
+      const avatar = document.createElement('div');
+      avatar.className = 'message-avatar';
+      avatar.textContent = type === 'ai' ? '🤖' : '👤';
+      
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'message-content';
+      contentDiv.innerHTML = content.replace(/\n/g, '<br>');
+      
+      messageDiv.appendChild(avatar);
+      messageDiv.appendChild(contentDiv);
+      messagesDiv.appendChild(messageDiv);
+      
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    function showTyping() {
+      const messagesDiv = document.getElementById('chatMessages');
+      const typingDiv = document.createElement('div');
+      typingDiv.className = 'message ai';
+      typingDiv.id = 'typingIndicator';
+      
+      const avatar = document.createElement('div');
+      avatar.className = 'message-avatar';
+      avatar.textContent = '🤖';
+      
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'message-content';
+      contentDiv.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
+      
+      typingDiv.appendChild(avatar);
+      typingDiv.appendChild(contentDiv);
+      messagesDiv.appendChild(typingDiv);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    function hideTyping() {
+      const typing = document.getElementById('typingIndicator');
+      if (typing) typing.remove();
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('chatInput');
+      const message = input.value.trim();
+      
+      if (!message || isProcessing) return;
+      
+      // ユーザーメッセージを表示
+      addMessage('user', message);
+      input.value = '';
+      input.style.height = 'auto';
+      
+      // 処理中フラグ
+      isProcessing = true;
+      document.getElementById('sendButton').disabled = true;
+      
+      // タイピングインジケーター表示
+      showTyping();
+      
+      // 会話履歴に追加
+      conversationHistory.push({
+        role: 'user',
+        parts: [{text: message}]
+      });
+      
+      try {
+        // Gemini APIを呼び出し
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            contents: conversationHistory,
+            generationConfig: {
+              temperature: 0.7,
+              maxOutputTokens: 1000,
+            }
+          })
+        });
+
+        const data = await response.json();
+        hideTyping();
+        
+        if (data.candidates && data.candidates[0]) {
+          const aiResponse = data.candidates[0].content.parts[0].text;
+          
+          // AIの応答を表示
+          addMessage('ai', aiResponse);
+          
+          // 会話履歴に追加
+          conversationHistory.push({
+            role: 'model',
+            parts: [{text: aiResponse}]
+          });
+          
+          // 会話が終了したか判定
+          checkIfComplete(aiResponse);
+        } else {
+          throw new Error('API応答が不正です');
+        }
+        
+      } catch (error) {
+        hideTyping();
+        console.error('エラー:', error);
+        addMessage('ai', '申し訳ございません。一時的なエラーが発生しました。もう一度お試しください。');
+      }
+      
+      isProcessing = false;
+      document.getElementById('sendButton').disabled = false;
+      input.focus();
+    }
+
+    function checkIfComplete(aiResponse) {
+      // 「最後に」「ご確認」などのキーワードで完了を判定
+      if (aiResponse.includes('最後に') || aiResponse.includes('以上で') || aiResponse.includes('ご確認')) {
+        // 要約と送信の処理
+        setTimeout(() => {
+          addMessage('ai', '通報内容をまとめています。少々お待ちください...');
+          setTimeout(submitReport, 2000);
+        }, 1000);
+      }
+    }
+
+    async function submitReport() {
+      try {
+        // 会話履歴からデータを抽出してGoogle Sheetsに送信
+        const summary = conversationHistory
+          .filter(msg => msg.role === 'user')
+          .map(msg => msg.parts[0].text)
+          .join('\n');
+
+        const submitData = {
+          action: 'newReport',
+          timestamp: new Date().toISOString(),
+          incidentDescription: summary,
+          incidentDate: '',
+          incidentTime: '',
+          incidentLocation: '',
+          involvedPersons: '',
+          witnessInfo: '',
+          files: []
+        };
+
+        await fetch(GAS_WEB_APP_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(submitData)
+        });
+
+        const trackingNumber = 'WB-' + Date.now().toString().slice(-8);
+        
+        addMessage('ai', `✅ **通報を受け付けました**
+
+受付番号: **${trackingNumber}**
+
+この番号は必ず保存してください。後から追加情報を送信する際に必要になります。
+
+ご通報ありがとうございました。内容はコンプライアンス担当者に通知され、適切に対応いたします。`);
+
+      } catch (error) {
+        console.error('送信エラー:', error);
+        addMessage('ai', '送信中にエラーが発生しました。恐れ入りますが、もう一度お試しください。');
+      }
+    }
+
+    // Enterキーで送信（Shift+Enterで改行）
+    document.getElementById('chatInput').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    // テキストエリアの自動リサイズ
+    document.getElementById('chatInput').addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    });
+
+    function switchMode(mode) {
+      const chatMode = document.getElementById('chatMode');
+      const formMode = document.getElementById('formMode');
+      const buttons = document.querySelectorAll('.mode-btn');
+      
+      buttons.forEach(btn => btn.classList.remove('active'));
+      
+      if (mode === 'chat') {
+        chatMode.classList.remove('hidden');
+        formMode.classList.add('hidden');
+        buttons[0].classList.add('active');
+      } else {
+        chatMode.classList.add('hidden');
+        formMode.classList.remove('hidden');
+        buttons[1].classList.add('active');
+      }
+    }
+  </script>
 </body>
 </html>
