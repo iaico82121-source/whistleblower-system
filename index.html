@@ -333,10 +333,13 @@
 
   <script>
     // ============================================
-    // 🔧 重要: ここにGemini APIキーを設定
+    // 🔐 重要: APIキーはサーバー側（GAS）で保持されています
+    // フロントエンドからは、GASプロキシAPIエンドポイントのみを呼び出します
     // ============================================
-    const GEMINI_API_KEY = 'AIzaSyB1IIYgGomUqTQhEUBasGlfJYhZnn1kfgc';
-    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxSAdId-tHF2Xc9PpFrpj_nAl--YaiEKIYHE_6Ukee2ncaQk92hi85DvcKsu7M0XxBjVg/exec';
+    // GASプロキシAPIのURLを設定してください（gas-proxy-api.gsをデプロイしたURL）
+    const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbzwOgR6XYsMDRiFJgnob6n4W77TbowlSGwdCvMtr-GEAarskObW8Fi4OE3NjbsXT8EwXA/exec'; // TODO: GASをデプロイしたURLをここに設定してください
+    // 既存のGAS Web App URL（通報送信用、既存のものがあれば）
+    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzwOgR6XYsMDRiFJgnob6n4W77TbowlSGwdCvMtr-GEAarskObW8Fi4OE3NjbsXT8EwXA/exec'; // 既存のGAS Web App URLがあれば設定
 
     let conversationHistory = [];
     let collectedData = {};
@@ -438,24 +441,35 @@
       });
       
       try {
-        // Gemini APIを呼び出し
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent`, {
+        // GASプロキシAPIが設定されていない場合はエラーメッセージを表示
+        if (!GAS_API_URL) {
+          hideTyping();
+          addMessage('ai', '現在、システム保守のためAIチャット機能を一時停止しております。申し訳ございませんが、しばらく時間をおいてから再度お試しください。');
+          isProcessing = false;
+          document.getElementById('sendButton').disabled = false;
+          input.focus();
+          return;
+        }
+        
+        // GASプロキシAPI経由でGemini APIを呼び出し（APIキーはサーバー側で保持）
+        const response = await fetch(GAS_API_URL, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-goog-api-key': 'AIzaSyB1IIYgGomUqTQhEUBasGlfJYhZnn1kfgc'
           },
           body: JSON.stringify({
-            contents: conversationHistory,
-            generationConfig: {
-              temperature: 0.7,
-              maxOutputTokens: 1000,
-            }
+            action: 'chat',
+            contents: conversationHistory
           })
         });
 
         const data = await response.json();
         hideTyping();
+        
+        // エラーチェック
+        if (data.error) {
+          throw new Error(data.message || 'API呼び出しエラー');
+        }
         
         if (data.candidates && data.candidates[0]) {
           const aiResponse = data.candidates[0].content.parts[0].text;
@@ -499,6 +513,12 @@
 
     async function submitReport() {
       try {
+        // 応急処置: フロント側にGASのURLが無い場合は送信処理をスキップし、案内メッセージのみ表示
+        if (!GAS_WEB_APP_URL) {
+          addMessage('ai', '現在、通報内容の自動送信機能は一時的に停止しております。お急ぎの場合は、担当窓口へ直接ご連絡いただきますようお願いいたします。');
+          return;
+        }
+
         // 会話履歴からデータを抽出してGoogle Sheetsに送信
         const summary = conversationHistory
           .filter(msg => msg.role === 'user')
